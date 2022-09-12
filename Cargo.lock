@@ -426,7 +426,6 @@ version = "0.1.0"
 dependencies = [
  "actix-http",
  "http",
- "log",
  "reqwest",
  "serde",
  "serde_json",
