@@ -14,7 +14,7 @@ pub struct UserInfo {
     pub avatar: String,
 }
 
-pub async fn get_user_info(origin_headers: ActixHeaderMap) -> Result<UserInfo, ServiceError> {
+pub async fn get_user_info(origin_headers: ActixHeaderMap) -> Result<UserInfo, FetchError> {
     request::<UserInfo>(&RequestConfig {
         url: "user/userinfo",
         method: Method::GET,
