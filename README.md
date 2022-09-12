@@ -5,7 +5,7 @@ Package reqwest with trace.
 ## Example
 
 ```rust
-use jwfetch::{request, RequestConfig, ServiceError, ActixHeaderMap, Method};
+use jwfetch::{request, RequestConfig, FetchError, ActixHeaderMap, Method};
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Serialize, Clone)]
