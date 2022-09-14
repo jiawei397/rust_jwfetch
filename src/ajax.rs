@@ -44,6 +44,16 @@ pub struct RequestConfig {
     pub extra_header_keys: Option<Vec<&'static str>>,
 }
 
+#[derive(Debug)]
+pub struct BaseRequestConfig {
+    pub base_url: Option<&'static str>,
+    pub headers: Option<HeaderMap>,
+    pub data: Option<String>,
+    pub timeout: Option<Duration>,
+    pub origin_headers: Option<ActixHeaderMap>,
+    pub extra_header_keys: Option<Vec<&'static str>>,
+}
+
 /// fetch from remote url
 pub async fn request<T>(options: &RequestConfig) -> Result<T, FetchError>
 where
@@ -51,7 +61,7 @@ where
     for<'de2> T: serde::Deserialize<'de2>,
 {
     let client = reqwest::Client::new();
-    let url = match &options.base_url {
+    let mut url = match &options.base_url {
         Some(base_url) => {
             let base_url = if base_url.ends_with("/") {
                 &base_url[0..&base_url.len() - 1]
@@ -90,13 +100,20 @@ where
                 "application/json; charset=utf-8".parse().unwrap(),
             );
         }
+        if let Some(body) = &options.data {
+            // let body = serde_json::to_string(data).unwrap(); //TODO 怎么动态定义这个类型没有头绪
+            builder = builder.body(body.to_owned());
+        }
+    } else if &options.method == Method::GET || &options.method == Method::DELETE {
+        if let Some(extra_str) = &options.data {
+            if url.ends_with("?") {
+                url.push_str(format!("&{}", &extra_str).as_str());
+            } else {
+                url.push_str(format!("?{}", &extra_str).as_str());
+            }
+        }
     }
     builder = builder.headers(new_headers);
-
-    if let Some(body) = &options.data {
-        // let body = serde_json::to_string(data).unwrap(); //TODO 怎么动态定义这个类型没有头绪
-        builder = builder.body(body.to_owned());
-    }
 
     match builder.send().await {
         Ok(resp) => {
@@ -125,4 +142,40 @@ where
             code: None,
         }),
     }
+}
+
+pub async fn get<T>(url: &'static str, options: &BaseRequestConfig) -> Result<T, FetchError>
+where
+    T: serde::Serialize,
+    for<'de2> T: serde::Deserialize<'de2>,
+{
+    request(&RequestConfig {
+        method: Method::GET,
+        url,
+        base_url: options.base_url,
+        headers: options.headers.to_owned(),
+        data: options.data.to_owned(),
+        timeout: options.timeout,
+        origin_headers: options.origin_headers.to_owned(),
+        extra_header_keys: options.extra_header_keys.to_owned(),
+    })
+    .await
+}
+
+pub async fn post<T>(url: &'static str, options: &BaseRequestConfig) -> Result<T, FetchError>
+where
+    T: serde::Serialize,
+    for<'de2> T: serde::Deserialize<'de2>,
+{
+    request(&RequestConfig {
+        method: Method::POST,
+        url,
+        base_url: options.base_url,
+        headers: options.headers.to_owned(),
+        data: options.data.to_owned(),
+        timeout: options.timeout,
+        origin_headers: options.origin_headers.to_owned(),
+        extra_header_keys: options.extra_header_keys.to_owned(),
+    })
+    .await
 }
