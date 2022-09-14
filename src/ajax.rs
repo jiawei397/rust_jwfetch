@@ -83,6 +83,14 @@ where
     if let Some(headers) = &options.headers {
         new_headers.extend(headers.clone());
     }
+    if &options.method == Method::POST || &options.method == Method::PUT {
+        if !new_headers.contains_key("content-type") {
+            new_headers.insert(
+                HeaderName::from_static("content-type"),
+                "application/json; charset=utf-8".parse().unwrap(),
+            );
+        }
+    }
     builder = builder.headers(new_headers);
 
     if let Some(body) = &options.data {
