@@ -5,7 +5,7 @@ Package reqwest with trace.
 ## Example
 
 ```rust
-use jwfetch::{request, RequestConfig, FetchError, ActixHeaderMap, Method};
+use jwfetch::{request, get, post, BaseRequestConfig, RequestConfig, FetchError, ActixHeaderMap, Method};
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Serialize, Clone)]
@@ -16,7 +16,7 @@ pub struct UserInfo {
 
 pub async fn get_user_info(origin_headers: ActixHeaderMap) -> Result<UserInfo, FetchError> {
     request::<UserInfo>(&RequestConfig {
-        url: "user/userinfo",
+        url: "user/userinfo".to_string(),
         method: Method::GET,
         base_url: Some("https://api.github.com/api/"),
         origin_headers: Some(origin_headers),
@@ -28,3 +28,5 @@ pub async fn get_user_info(origin_headers: ActixHeaderMap) -> Result<UserInfo, F
     .await
 }
 ```
+
+Or you can use `get`, `post` with `BaseRequestConfig` instead.

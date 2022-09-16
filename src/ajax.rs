@@ -33,7 +33,7 @@ pub fn add_trace_header(
 
 #[derive(Debug)]
 pub struct RequestConfig {
-    pub url: &'static str,
+    pub url: String,
     pub method: Method,
     pub base_url: Option<&'static str>,
     pub headers: Option<HeaderMap>,
@@ -144,7 +144,7 @@ where
     }
 }
 
-pub async fn get<T>(url: &'static str, options: &BaseRequestConfig) -> Result<T, FetchError>
+pub async fn get<T>(url: String, options: &BaseRequestConfig) -> Result<T, FetchError>
 where
     T: serde::Serialize,
     for<'de2> T: serde::Deserialize<'de2>,
@@ -162,7 +162,7 @@ where
     .await
 }
 
-pub async fn post<T>(url: &'static str, options: &BaseRequestConfig) -> Result<T, FetchError>
+pub async fn post<T>(url: String, options: &BaseRequestConfig) -> Result<T, FetchError>
 where
     T: serde::Serialize,
     for<'de2> T: serde::Deserialize<'de2>,
