@@ -422,12 +422,13 @@ dependencies = [
 
 [[package]]
 name = "jwfetch"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "actix-http",
  "http",
  "reqwest",
  "serde",
+ "serde_derive",
  "serde_json",
 ]
 

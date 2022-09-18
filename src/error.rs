@@ -1,5 +1,7 @@
+use serde_derive::{Deserialize, Serialize};
 use std::fmt;
 
+#[derive(Deserialize, Debug, Serialize, Clone)]
 pub enum ErrType {
     /// fetch url error
     NetworkErr,
@@ -9,6 +11,7 @@ pub enum ErrType {
     ParseJSONErr,
 }
 
+#[derive(Deserialize, Debug, Serialize, Clone)]
 pub struct FetchError {
     pub message: String,
     pub code: Option<u16>,
@@ -17,6 +20,21 @@ pub struct FetchError {
 
 impl fmt::Display for FetchError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.message)
+        match self.err_type {
+            ErrType::NetworkErr => {
+                write!(f, "network error, {}", self.message)
+            }
+            ErrType::HttpErr => {
+                write!(f, "http error [{}], {}", self.code.unwrap(), self.message)
+            }
+            ErrType::ParseJSONErr => {
+                write!(
+                    f,
+                    "parse json error [{}], {}",
+                    self.code.unwrap(),
+                    self.message
+                )
+            }
+        }
     }
 }
