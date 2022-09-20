@@ -1,3 +1,4 @@
+use actix_http::StatusCode;
 use serde_derive::{Deserialize, Serialize};
 use std::fmt;
 
@@ -11,10 +12,15 @@ pub enum ErrType {
     ParseJSONErr,
 }
 
-#[derive(Deserialize, Debug, Serialize, Clone)]
+#[derive(Deserialize, Debug, Clone)]
+pub struct CustomError {
+    pub message: String,
+}
+
+#[derive(Debug, Clone)]
 pub struct FetchError {
     pub message: String,
-    pub code: Option<u16>,
+    pub code: Option<StatusCode>,
     pub err_type: ErrType,
 }
 

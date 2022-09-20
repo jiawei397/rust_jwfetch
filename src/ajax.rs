@@ -1,4 +1,4 @@
-use crate::error::{ErrType, FetchError};
+use crate::error::{CustomError, ErrType, FetchError};
 use actix_http::header::{HeaderMap as ActixHeaderMap, HeaderName};
 use http::Method;
 use reqwest::{self, header::HeaderMap};
@@ -52,6 +52,13 @@ pub struct BaseRequestConfig {
     pub timeout: Option<Duration>,
     pub origin_headers: Option<ActixHeaderMap>,
     pub extra_header_keys: Option<Vec<&'static str>>,
+}
+
+fn get_error_message(err: &str) -> String {
+    match serde_json::from_str::<CustomError>(err) {
+        Ok(err) => err.message,
+        Err(err) => err.to_string(),
+    }
 }
 
 /// fetch from remote url
@@ -117,27 +124,27 @@ where
 
     match builder.send().await {
         Ok(resp) => {
-            let http_code = resp.status().as_u16();
+            let http_code = resp.status();
             let ret_body = &resp.text().await.unwrap_or_default();
-            if http_code >= 200 && http_code < 300 {
+            if http_code.is_success() {
                 match serde_json::from_str::<T>(ret_body.as_str()) {
                     Ok(body) => Ok(body),
                     Err(err) => Err(FetchError {
-                        message: err.to_string(),
+                        message: get_error_message(&err.to_string()),
                         code: Some(http_code),
                         err_type: ErrType::ParseJSONErr,
                     }),
                 }
             } else {
                 Err(FetchError {
-                    message: ret_body.to_string(),
+                    message: get_error_message(ret_body),
                     err_type: ErrType::HttpErr,
                     code: Some(http_code),
                 })
             }
         }
         Err(err) => Err(FetchError {
-            message: err.to_string(),
+            message: get_error_message(&err.to_string()),
             err_type: ErrType::NetworkErr,
             code: None,
         }),
