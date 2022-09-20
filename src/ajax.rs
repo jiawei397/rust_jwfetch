@@ -85,6 +85,15 @@ where
         }
         None => options.url.to_string(),
     };
+    if &options.method == Method::GET || &options.method == Method::DELETE {
+        if let Some(extra_str) = &options.data {
+            if url.ends_with("?") {
+                url.push_str(format!("&{}", &extra_str).as_str());
+            } else {
+                url.push_str(format!("?{}", &extra_str).as_str());
+            }
+        }
+    }
 
     let mut builder = client.request(options.method.to_owned(), &url).timeout(
         options
@@ -110,14 +119,6 @@ where
         if let Some(body) = &options.data {
             // let body = serde_json::to_string(data).unwrap(); //TODO 怎么动态定义这个类型没有头绪
             builder = builder.body(body.to_owned());
-        }
-    } else if &options.method == Method::GET || &options.method == Method::DELETE {
-        if let Some(extra_str) = &options.data {
-            if url.ends_with("?") {
-                url.push_str(format!("&{}", &extra_str).as_str());
-            } else {
-                url.push_str(format!("?{}", &extra_str).as_str());
-            }
         }
     }
     builder = builder.headers(new_headers);
