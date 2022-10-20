@@ -128,12 +128,14 @@ where
             let http_code = resp.status();
             let ret_body = &resp.text().await.unwrap_or_default();
             if http_code.is_success() {
-                match serde_json::from_str::<T>(ret_body.as_str()) {
+                let body = ret_body.as_str();
+                match serde_json::from_str::<T>(body) {
                     Ok(body) => Ok(body),
                     Err(err) => Err(FetchError {
                         message: get_error_message(&err.to_string()),
                         code: Some(http_code),
                         err_type: ErrType::ParseJSONErr,
+                        body: Some(body.to_string()),
                     }),
                 }
             } else {
@@ -141,6 +143,7 @@ where
                     message: get_error_message(ret_body),
                     err_type: ErrType::HttpErr,
                     code: Some(http_code),
+                    body: None,
                 })
             }
         }
@@ -148,6 +151,7 @@ where
             message: get_error_message(&err.to_string()),
             err_type: ErrType::NetworkErr,
             code: None,
+            body: None,
         }),
     }
 }

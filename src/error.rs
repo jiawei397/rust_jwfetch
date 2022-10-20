@@ -22,23 +22,25 @@ pub struct FetchError {
     pub message: String,
     pub code: Option<StatusCode>,
     pub err_type: ErrType,
+    pub body: Option<String>,
 }
 
 impl fmt::Display for FetchError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.err_type {
             ErrType::NetworkErr => {
-                write!(f, "network error, {}", self.message)
+                write!(f, "Network error, {}", self.message)
             }
             ErrType::HttpErr => {
-                write!(f, "http error [{}], {}", self.code.unwrap(), self.message)
+                write!(f, "Http error [{}], {}", self.code.unwrap(), self.message)
             }
             ErrType::ParseJSONErr => {
                 write!(
                     f,
-                    "parse json error [{}], {}",
+                    "Parse json error [{}], {}. \nThe origin body is: {}",
                     self.code.unwrap(),
-                    self.message
+                    self.message,
+                    self.body.as_ref().unwrap()
                 )
             }
         }
