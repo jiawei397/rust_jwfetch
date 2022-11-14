@@ -1,7 +1,8 @@
-use crate::error::{CustomError, ErrType, FetchError};
+use crate::error::{CustomError, FetchError, HttpError, ParseError};
 use actix_http::header::{HeaderMap as ActixHeaderMap, HeaderName};
 use http::Method;
 use reqwest::{self, header::HeaderMap};
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 pub fn add_trace_header(
@@ -64,8 +65,8 @@ fn get_error_message(err: &str) -> String {
 /// fetch from remote url
 pub async fn request<T>(options: &RequestConfig) -> Result<T, FetchError>
 where
-    T: serde::Serialize,
-    for<'de2> T: serde::Deserialize<'de2>,
+    T: Serialize,
+    for<'de2> T: Deserialize<'de2>,
 {
     let client = reqwest::Client::new();
     let mut url = match &options.base_url {
@@ -131,35 +132,27 @@ where
                 let body = ret_body.as_str();
                 match serde_json::from_str::<T>(body) {
                     Ok(body) => Ok(body),
-                    Err(err) => Err(FetchError {
+                    Err(err) => Err(FetchError::Parse(ParseError {
                         message: get_error_message(&err.to_string()),
-                        code: Some(http_code),
-                        err_type: ErrType::ParseJSONErr,
-                        body: Some(body.to_string()),
-                    }),
+                        code: http_code,
+                        body: body.to_string(),
+                    })),
                 }
             } else {
-                Err(FetchError {
+                Err(FetchError::Http(HttpError {
                     message: get_error_message(ret_body),
-                    err_type: ErrType::HttpErr,
-                    code: Some(http_code),
-                    body: None,
-                })
+                    code: http_code,
+                }))
             }
         }
-        Err(err) => Err(FetchError {
-            message: get_error_message(&err.to_string()),
-            err_type: ErrType::NetworkErr,
-            code: None,
-            body: None,
-        }),
+        Err(err) => Err(FetchError::Network(err)),
     }
 }
 
 pub async fn get<T>(url: String, options: &BaseRequestConfig) -> Result<T, FetchError>
 where
-    T: serde::Serialize,
-    for<'de2> T: serde::Deserialize<'de2>,
+    T: Serialize,
+    for<'de2> T: Deserialize<'de2>,
 {
     request(&RequestConfig {
         method: Method::GET,
@@ -176,8 +169,8 @@ where
 
 pub async fn post<T>(url: String, options: &BaseRequestConfig) -> Result<T, FetchError>
 where
-    T: serde::Serialize,
-    for<'de2> T: serde::Deserialize<'de2>,
+    T: Serialize,
+    for<'de2> T: Deserialize<'de2>,
 {
     request(&RequestConfig {
         method: Method::POST,

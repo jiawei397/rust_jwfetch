@@ -1,48 +1,54 @@
 use actix_http::StatusCode;
-use serde_derive::{Deserialize, Serialize};
+use serde_derive::Deserialize;
+use std::error::Error;
 use std::fmt;
 
-#[derive(Deserialize, Debug, Serialize, Clone)]
-pub enum ErrType {
+#[derive(Debug)]
+pub enum FetchError {
     /// fetch url error
-    NetworkErr,
+    Network(reqwest::Error),
     /// http code is not valid in 200 and 300
-    HttpErr,
+    Http(HttpError),
     /// invalid response json
-    ParseJSONErr,
+    Parse(ParseError),
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Debug, Deserialize)]
 pub struct CustomError {
     pub message: String,
 }
 
-#[derive(Debug, Clone)]
-pub struct FetchError {
+#[derive(Debug)]
+pub struct HttpError {
     pub message: String,
-    pub code: Option<StatusCode>,
-    pub err_type: ErrType,
-    pub body: Option<String>,
+    pub code: StatusCode,
+}
+
+#[derive(Debug)]
+pub struct ParseError {
+    pub message: String,
+    pub code: StatusCode,
+    pub body: String,
 }
 
 impl fmt::Display for FetchError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.err_type {
-            ErrType::NetworkErr => {
-                write!(f, "Network error, {}", self.message)
+        match self {
+            FetchError::Network(err) => {
+                write!(f, "Network error: {}", err.to_string())
             }
-            ErrType::HttpErr => {
-                write!(f, "Http error [{}], {}", self.code.unwrap(), self.message)
+            FetchError::Http(err) => {
+                write!(f, "Http error [{}]: {}", err.code, err.message)
             }
-            ErrType::ParseJSONErr => {
+            FetchError::Parse(err) => {
                 write!(
                     f,
-                    "Parse json error [{}], {}. \nThe origin body is: {}",
-                    self.code.unwrap(),
-                    self.message,
-                    self.body.as_ref().unwrap()
+                    "Parse error [{}]: {}. \nOrigin body: {}",
+                    err.code, err.message, err.body
                 )
             }
         }
     }
 }
+
+impl Error for FetchError {}
