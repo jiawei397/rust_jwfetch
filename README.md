@@ -15,10 +15,10 @@ pub struct UserInfo {
 }
 
 pub async fn get_user_info(origin_headers: ActixHeaderMap) -> Result<UserInfo, FetchError> {
-    request::<UserInfo>(&RequestConfig {
+    request::<UserInfo>(RequestConfig {
         url: "user/userinfo".to_string(),
         method: Method::GET,
-        base_url: Some("https://api.github.com/api/"),
+        base_url: Some("https://api.github.com/api/".to_string()),
         origin_headers: Some(origin_headers),
         headers: None,
         data: None,

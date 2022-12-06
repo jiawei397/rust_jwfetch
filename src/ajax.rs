@@ -36,7 +36,7 @@ pub fn add_trace_header(
 pub struct RequestConfig {
     pub url: String,
     pub method: Method,
-    pub base_url: Option<&'static str>,
+    pub base_url: Option<String>,
     pub headers: Option<HeaderMap>,
     pub data: Option<String>,
     pub timeout: Option<Duration>,
@@ -47,7 +47,7 @@ pub struct RequestConfig {
 
 #[derive(Debug)]
 pub struct BaseRequestConfig {
-    pub base_url: Option<&'static str>,
+    pub base_url: Option<String>,
     pub headers: Option<HeaderMap>,
     pub data: Option<String>,
     pub timeout: Option<Duration>,
@@ -63,7 +63,7 @@ fn get_error_message(err: &str) -> String {
 }
 
 /// fetch from remote url
-pub async fn request<T>(options: &RequestConfig) -> Result<T, FetchError>
+pub async fn request<T>(options: RequestConfig) -> Result<T, FetchError>
 where
     T: Serialize,
     for<'de2> T: Deserialize<'de2>,
@@ -82,9 +82,9 @@ where
             } else {
                 &options.url
             };
-            format!("{}/{}", base_url, last_url).to_string()
+            format!("{}/{}", base_url, last_url)
         }
-        None => options.url.to_string(),
+        None => options.url,
     };
     if &options.method == Method::GET || &options.method == Method::DELETE {
         if let Some(extra_str) = &options.data {
@@ -96,30 +96,28 @@ where
         }
     }
 
-    let mut builder = client.request(options.method.to_owned(), &url).timeout(
-        options
-            .timeout
-            .unwrap_or_else(|| Duration::from_secs(60 * 2)),
-    );
+    let mut builder = client
+        .request(options.method.to_owned(), &url)
+        .timeout(options.timeout.unwrap_or(Duration::from_secs(60 * 2)));
 
     let mut new_headers = match &options.origin_headers {
         Some(origin_headers) => add_trace_header(origin_headers, &options.extra_header_keys),
         None => HeaderMap::new(),
     };
 
-    if let Some(headers) = &options.headers {
-        new_headers.extend(headers.clone());
+    if let Some(headers) = options.headers {
+        new_headers.extend(headers);
     }
     if &options.method == Method::POST || &options.method == Method::PUT {
         if !new_headers.contains_key("content-type") {
             new_headers.insert(
-                HeaderName::from_static("content-type"),
+                "content-type",
                 "application/json; charset=utf-8".parse().unwrap(),
             );
         }
-        if let Some(body) = &options.data {
+        if let Some(body) = options.data {
             // let body = serde_json::to_string(data).unwrap(); //TODO 怎么动态定义这个类型没有头绪
-            builder = builder.body(body.to_owned());
+            builder = builder.body(body);
         }
     }
     builder = builder.headers(new_headers);
@@ -149,38 +147,38 @@ where
     }
 }
 
-pub async fn get<T>(url: String, options: &BaseRequestConfig) -> Result<T, FetchError>
+pub async fn get<T>(url: String, options: BaseRequestConfig) -> Result<T, FetchError>
 where
     T: Serialize,
     for<'de2> T: Deserialize<'de2>,
 {
-    request(&RequestConfig {
+    request(RequestConfig {
         method: Method::GET,
         url,
         base_url: options.base_url,
-        headers: options.headers.to_owned(),
-        data: options.data.to_owned(),
+        headers: options.headers,
+        data: options.data,
         timeout: options.timeout,
-        origin_headers: options.origin_headers.to_owned(),
-        extra_header_keys: options.extra_header_keys.to_owned(),
+        origin_headers: options.origin_headers,
+        extra_header_keys: options.extra_header_keys,
     })
     .await
 }
 
-pub async fn post<T>(url: String, options: &BaseRequestConfig) -> Result<T, FetchError>
+pub async fn post<T>(url: String, options: BaseRequestConfig) -> Result<T, FetchError>
 where
     T: Serialize,
     for<'de2> T: Deserialize<'de2>,
 {
-    request(&RequestConfig {
+    request(RequestConfig {
         method: Method::POST,
         url,
         base_url: options.base_url,
-        headers: options.headers.to_owned(),
-        data: options.data.to_owned(),
+        headers: options.headers,
+        data: options.data,
         timeout: options.timeout,
-        origin_headers: options.origin_headers.to_owned(),
-        extra_header_keys: options.extra_header_keys.to_owned(),
+        origin_headers: options.origin_headers,
+        extra_header_keys: options.extra_header_keys,
     })
     .await
 }
