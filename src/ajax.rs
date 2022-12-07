@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 pub fn add_trace_header(
-    origin_headers: &ActixHeaderMap,
+    origin_headers: ActixHeaderMap,
     extra_header_keys: &Option<Vec<&'static str>>,
 ) -> HeaderMap {
     let trace_keys = [
@@ -100,7 +100,7 @@ where
         .request(options.method.to_owned(), &url)
         .timeout(options.timeout.unwrap_or(Duration::from_secs(60 * 2)));
 
-    let mut new_headers = match &options.origin_headers {
+    let mut new_headers = match options.origin_headers {
         Some(origin_headers) => add_trace_header(origin_headers, &options.extra_header_keys),
         None => HeaderMap::new(),
     };

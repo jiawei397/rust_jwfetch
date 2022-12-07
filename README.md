@@ -4,6 +4,8 @@ Package reqwest with trace.
 
 ## Example
 
+run example use `cargo run --example simple`:
+
 ```rust
 use jwfetch::{request, get, post, BaseRequestConfig, RequestConfig, FetchError, ActixHeaderMap, Method};
 use serde_derive::{Deserialize, Serialize};
