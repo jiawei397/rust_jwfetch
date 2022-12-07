@@ -18,7 +18,7 @@ jobs:
     environment: cargo
 
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@master
 
       # Use caching to speed up your build
       - name: Cache publish-action bin
