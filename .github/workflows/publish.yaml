@@ -6,7 +6,7 @@ on:
     # paths:
     #   - 'src/'
     tags:
-      - **
+      - '**'
 
 jobs:
   publish:
