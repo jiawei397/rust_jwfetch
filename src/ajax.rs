@@ -58,7 +58,7 @@ pub struct BaseRequestConfig {
 fn get_error_message(err: &str) -> String {
     match serde_json::from_str::<CustomError>(err) {
         Ok(err) => err.message,
-        Err(err) => err.to_string(),
+        Err(_e) => err.to_string(),
     }
 }
 
