@@ -35,8 +35,22 @@ async fn main() {
             println!("{:?}", info);
         }
         Err(e) => {
-            println!("{}", e);
-            // Err(e)
+            match e {
+                FetchError::Http(err) => {
+                    println!("Http error [{}]: {}", err.code, err.message);
+                }
+                FetchError::Parse(err) => {
+                    println!(
+                        "Parse error [{}]: {}. \nOrigin body: {}",
+                        err.code, err.message, err.body
+                    );
+                }
+                FetchError::Network(network_error) => {
+                    println!("network_error: {}", network_error);
+                }
+            }
+            // Or you can  simple print error
+            // println!("{}", e);
         }
     }
 }
