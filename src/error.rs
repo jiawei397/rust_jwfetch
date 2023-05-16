@@ -1,6 +1,5 @@
 use actix_http::StatusCode;
 use serde_derive::Deserialize;
-use std::error::Error;
 use std::fmt;
 
 #[derive(Debug)]
@@ -51,4 +50,19 @@ impl fmt::Display for FetchError {
     }
 }
 
-impl Error for FetchError {}
+impl From<reqwest::Error> for FetchError {
+    fn from(err: reqwest::Error) -> Self {
+        FetchError::Network(err)
+    }
+}
+
+impl From<HttpError> for FetchError {
+    fn from(err: HttpError) -> Self {
+        FetchError::Http(err)
+    }
+}
+impl From<ParseError> for FetchError {
+    fn from(err: ParseError) -> Self {
+        FetchError::Parse(err)
+    }
+}
